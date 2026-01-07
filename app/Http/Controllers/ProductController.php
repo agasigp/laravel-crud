@@ -44,7 +44,10 @@ class ProductController extends Controller
 
         Product::create($validated);
 
-        return redirect()->route('products.index')->with('success', 'Product created successfully.');
+        return redirect()
+            ->route('products.index')
+            ->with('message', 'Berhasil tambah produk.')
+            ->with('flash_status', 'success');
     }
 
     /**
@@ -75,7 +78,10 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        return redirect()
+            ->route('products.index')
+            ->with('message', 'Berhasil edit produk.')
+            ->with('flash_status', 'success');
     }
 
     /**
@@ -83,6 +89,11 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+
+        return redirect()
+            ->route('products.index')
+            ->with('message', 'Berhasil hapus produk.')
+            ->with('flash_status', 'success');
     }
 }

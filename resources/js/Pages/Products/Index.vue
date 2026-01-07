@@ -4,6 +4,7 @@ import { TailwindPagination } from "laravel-vue-pagination";
 import { ref, computed } from "vue";
 import { router, Link, usePage } from "@inertiajs/vue3";
 import DefaultButton from "@/Components/Buttons/DefaultButton.vue";
+import RedButton from "@/Components/Buttons/RedButton.vue";
 
 const props = defineProps({
     products: {
@@ -18,15 +19,6 @@ const queries = ref({
 });
 
 const pages = usePage();
-
-const getResults = async (page = 1) => {
-    queries.value.page = page;
-    router.get(
-        props.products.path,
-        { page: page, name: queries.value.name },
-        { preserveState: true }
-    );
-};
 
 // Tambahkan fungsi formatRupiah
 function formatRupiah(value) {
@@ -50,6 +42,28 @@ const formattedProducts = computed(() => {
         categoryName: map[p.category] ?? p.category,
     }));
 });
+
+// Ganti modal Flowbite dengan konfirmasi JS
+function openModal(id) {
+    if (!id) return;
+    const confirmed = window.confirm(
+        "Apakah Anda yakin ingin menghapus produk ini?"
+    );
+    if (confirmed) {
+        router.delete(route("products.destroy", id), {
+            preserveState: true,
+        });
+    }
+}
+
+const getResults = async (page = 1) => {
+    queries.value.page = page;
+    router.get(
+        props.products.path,
+        { page: page, name: queries.value.name },
+        { preserveState: true }
+    );
+};
 </script>
 
 <template>
@@ -66,40 +80,33 @@ const formattedProducts = computed(() => {
                     class="w-full bg-neutral-primary-soft p-6 border border-default rounded-base shadow-xs bg-white dark:bg-gray-900"
                 >
                     <div
+                        class="flex items-start sm:items-center p-4 text-sm text-fg-success-strong rounded-base bg-success-soft"
                         role="alert"
-                        :class="`alert alert-${$page.props.flash.status}`"
-                        v-if="$page.props.flash.message"
+                        v-if="$page.props.flash.status"
                     >
                         <svg
-                            v-if="$page.props.flash.status === 'success'"
+                            class="w-4 h-4 me-2 shrink-0 mt-0.5 sm:mt-0"
+                            aria-hidden="true"
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 shrink-0 stroke-current"
+                            width="24"
+                            height="24"
                             fill="none"
                             viewBox="0 0 24 24"
+                            v-if="$page.props.flash.status === 'success'"
                         >
                             <path
+                                stroke="currentColor"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                             />
                         </svg>
-                        <svg
-                            v-else
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            class="h-6 w-6 shrink-0 stroke-current"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                        </svg>
-                        <span>{{ $page.props.flash.message }}</span>
+                        <p>
+                            <span>{{ $page.props.flash.message }}</span>
+                        </p>
                     </div>
+
                     <form @submit.prevent="getResults(page, name)">
                         <div
                             class="inline-flex rounded-md shadow-xs"
@@ -215,6 +222,10 @@ const formattedProducts = computed(() => {
                                         {{ formatRupiah(row.price) }}
                                     </td>
                                     <td class="px-6 py-4">
+                                        <RedButton @click="openModal(row.id)"
+                                            >Hapus</RedButton
+                                        >
+
                                         <Link
                                             :href="
                                                 route('products.edit', row.id)
@@ -238,15 +249,5 @@ const formattedProducts = computed(() => {
                 </div>
             </div>
         </div>
-
-        <dialog id="my_modal_2" class="modal">
-            <div class="modal-box">
-                <h3 class="text-lg font-bold">Hello!</h3>
-                <p class="py-4">Press ESC key or click outside to close</p>
-            </div>
-            <form method="dialog" class="modal-backdrop">
-                <button>close</button>
-            </form>
-        </dialog>
     </AppLayout>
 </template>
