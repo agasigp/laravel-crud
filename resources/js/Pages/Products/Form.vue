@@ -8,453 +8,191 @@ import { router, Link, useForm } from "@inertiajs/vue3";
 import Form from "@/Components/Form.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
-import _, { map } from "underscore";
+import DefaultButton from "@/Components/Buttons/DefaultButton.vue";
 
 const props = defineProps({
-    grantTypes: {
-        type: Array,
-    },
-    grant: {
+    product: {
         type: Object,
         default: () => ({}),
     },
 });
 
 const form = useForm({
-    name: props.grant.name,
-    grant_type_id: props.grant.grant_type_id,
-    start_date: props.grant.start_date,
-    end_date: props.grant.end_date,
-    submit_start_date: props.grant.submit_start_date,
-    review_date: props.grant.review_date,
-    announcement_date: props.grant.announcement_date,
-    signing_contract_date: props.grant.signing_contract_date,
-    progress_report_date: props.grant.progress_report_date,
-    final_report_date: props.grant.final_report_date,
-    presentation_date: props.grant.presentation_date,
-    user_guide: props.grant.user_guide,
-    detail_score_link: props.grant.detail_score_link,
-    contract_file: props.grant.contract_file,
+    name: props.product.name,
+    description: props.product.description,
+    price: props.product.price,
+    image: props.product.image,
+    weight: props.product.weight,
+    category: props.product.category,
 });
-
-onMounted(() => {
-    form.grant_type_id = props.grant.grant_type_id ??= props.grantTypes[0].id;
-});
-
-const truncatedUserGuide = (userGuide) => {
-    return userGuide.length > 50
-        ? userGuide.substring(0, 50) + "..."
-        : userGuide;
-};
 
 const saveAction = () => {
-    if (props.grant.id) {
-        form.transform((data) => ({
-            ...data,
-            user_guide:
-                typeof form.user_guide === "string" ? null : form.user_guide,
-            contract_file:
-                typeof form.contract_file === "string" ? null : form.contract_file,
-            _method: "PUT",
-        })).post(route("grants.update", props.grant.id), {
+    if (props.product.id) {
+        form.put(route("products.update", props.product.id), {
             preserveScroll: true,
         });
     } else {
-        form.transform((data) => ({
-            ...data,
-        })).post(route("grants.store"), {
+        form.post(route("products.store"), {
             preserveScroll: true,
         });
-    }
-};
-
-const filterReviews = _.debounce((query, reviewerNumber) => {
-    fetchReviews(query, reviewerNumber);
-}, 500);
-
-async function fetchReviews(query, reviewerNumber) {
-    const queryparams = {
-        q: query,
-        type: "all",
-        is_reviewer: "true",
-    };
-
-    fetch(route("ajax.users", queryparams))
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Network response was not ok.");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            if (reviewerNumber === 1) {
-                reviewers1.value = data.data;
-            } else {
-                reviewers2.value = data.data;
-            }
-        })
-        .catch((error) => {
-            return error;
-        });
-}
-
-const handleSelectedReviewer = (reviewer, type) => {
-    if (type === 1) {
-        form.reviewer1_user_id = reviewer.id;
-        reviewer1.value = reviewer.name;
-        reviewers1.value = [];
-    } else {
-        form.reviewer2_user_id = reviewer.id;
-        reviewer2.value = reviewer.name;
-        reviewers2.value = [];
     }
 };
 </script>
 
 <template>
-    <AppLayout title="Master Jenis Hibah">
+    <AppLayout title="Master Produk">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Hibah
+                Master Produk
             </h2>
         </template>
 
         <div class="py-6">
-            <div class="max-w-screen-2xl mx-auto sm:px-6 lg:px-8">
-                <div class="card bg-base-100 card-border shadow-sm">
-                    <div class="card-body">
-                        <div class="card-title">Tambah/Edit Hibah</div>
+            <div class="max-w-screen-xl mx-auto sm:px-6 lg:px-8">
+                <section class="bg-white dark:bg-gray-900">
+                    <div class="py-8 px-4 mx-auto">
+                        <h2
+                            class="mb-4 text-xl font-bold text-gray-900 dark:text-white"
+                        >
+                            Tambah/Edit Produk
+                        </h2>
                         <Form @submitted="saveAction">
                             <template #form>
-                                <fieldset class="fieldset">
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Judul
-                                    </legend>
-                                    <input
-                                        type="text"
-                                        class="input w-1/2"
-                                        placeholder="Judul Hibah"
-                                        v-model="form.name"
-                                        :class="[
-                                            $page.props.errors.name
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.name"
-                                    >
-                                        {{ $page.props.errors.name }}
-                                    </p>
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.year"
-                                    >
-                                        {{ $page.props.errors.year }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Jenis
-                                    </legend>
-                                    <select
-                                        class="select w-6/12"
-                                        v-model="form.grant_type_id"
-                                    >
-                                        <option
-                                            v-for="grantType in grantTypes"
-                                            :value="grantType.id"
+                                <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
+                                    <div class="sm:col-span-2">
+                                        <label
+                                            for="name"
+                                            class="block mb-2 text-sm font-medium dark:text-white"
+                                            :class="[
+                                                $page.props.errors.name
+                                                    ? 'text-red-600'
+                                                    : 'text-gray-900',
+                                            ]"
+                                            >Nama Produk</label
                                         >
-                                            {{ grantType.name }}
-                                        </option>
-                                    </select>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Mulai Pengajuan Proposal
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai Pengajuan Proposal"
-                                        v-model="form.submit_start_date"
-                                        :class="[
-                                            $page.props.errors.submit_start_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.submit_start_date"
-                                    >
-                                        {{ $page.props.errors.submit_start_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Review Proposal
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai Pengajuan Proposal"
-                                        v-model="form.review_date"
-                                        :class="[
-                                            $page.props.errors.review_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.review_date"
-                                    >
-                                        {{ $page.props.errors.review_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Pengumuman Pemenang
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai"
-                                        v-model="form.announcement_date"
-                                        :class="[
-                                            $page.props.errors.announcement_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.announcement_date"
-                                    >
-                                        {{ $page.props.errors.announcement_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Batas Akhir Tanda Tangan Kontrak
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai"
-                                        v-model="form.signing_contract_date"
-                                        :class="[
-                                            $page.props.errors.signing_contract_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.signing_contract_date"
-                                    >
-                                        {{ $page.props.errors.signing_contract_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Batas Akhir Laporan Kemajuan
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai"
-                                        v-model="form.progress_report_date"
-                                        :class="[
-                                            $page.props.errors.progress_report_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.progress_report_date"
-                                    >
-                                        {{ $page.props.errors.progress_report_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Batas Akhir Laporan Akhir
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai"
-                                        v-model="form.final_report_date"
-                                        :class="[
-                                            $page.props.errors.final_report_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.final_report_date"
-                                    >
-                                        {{ $page.props.errors.final_report_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Presentasi Hasil Penelitian
-                                    </legend>
-                                    <input
-                                        type="date"
-                                        class="input w-1/2"
-                                        placeholder="Tanggal Mulai"
-                                        v-model="form.presentation_date"
-                                        :class="[
-                                            $page.props.errors.presentation_date
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.presentation_date"
-                                    >
-                                        {{ $page.props.errors.presentation_date }}
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Buku Panduan
-                                    </legend>
-                                    <input
-                                        type="file"
-                                        class="file-input"
-                                        :class="[
-                                            $page.props.errors.user_guide
-                                                ? 'file-input-error'
-                                                : '',
-                                        ]"
-                                        @input="
-                                            form.user_guide =
-                                                $event.target.files[0]
-                                        "
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.user_guide"
-                                    >
-                                        {{ $page.props.errors.user_guide }}
-                                    </p>
-                                    <p>
-                                        <a
-                                            class="link link-primary"
-                                            :href="form.user_guide"
-                                            target="_blank"
-                                            >File Buku Panduan</a
+                                        <input
+                                            type="text"
+                                            v-model="form.name"
+                                            id="name"
+                                            :class="[
+                                                $page.props.errors.name
+                                                    ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 dark:bg-gray-700 focus:border-red-500 block w-full p-2.5 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500'
+                                                    : 'bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500',
+                                            ]"
+                                            placeholder="Type product name"
+                                        />
+                                        <p
+                                            class="mt-2 text-sm text-red-600 dark:text-red-500"
+                                            v-if="$page.props.errors.name"
                                         >
-                                    </p>
-
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Kontrak Penelitian
-                                    </legend>
-                                    <input
-                                        type="file"
-                                        class="file-input"
-                                        :class="[
-                                            $page.props.errors.contract_file
-                                                ? 'file-input-error'
-                                                : '',
-                                        ]"
-                                        @input="
-                                            form.contract_file =
-                                                $event.target.files[0]
-                                        "
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.contract_file"
-                                    >
-                                        {{ $page.props.errors.contract_file }}
-                                    </p>
-                                    <p>
-                                        <a
-                                            class="link link-primary"
-                                            :href="form.contract_file"
-                                            target="_blank"
-                                            >File Kontrak Penelitian</a
+                                            {{ $page.props.errors.name }}
+                                        </p>
+                                    </div>
+                                    <div class="w-full">
+                                        <label
+                                            for="price"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            :class="[
+                                                $page.props.errors.price
+                                                    ? 'text-red-600'
+                                                    : 'text-gray-900',
+                                            ]"
+                                            >Harga</label
                                         >
-                                    </p>
+                                        <input
+                                            type="number"
+                                            v-model="form.price"
+                                            id="price"
+                                            :class="[
+                                                $page.props.errors.price
+                                                    ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 dark:bg-gray-700 focus:border-red-500 block w-full p-2.5 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500'
+                                                    : 'bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500',
+                                            ]"
+                                            placeholder="Harga"
+                                        />
+                                        <p
+                                            class="mt-2 text-sm text-red-600 dark:text-red-500"
+                                            v-if="$page.props.errors.price"
+                                        >
+                                            {{ $page.props.errors.price }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            for="item-weight"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            :class="[
+                                                $page.props.errors.weight
+                                                    ? 'text-red-600'
+                                                    : 'text-gray-900',
+                                            ]"
+                                            >Berat (kg)</label
+                                        >
+                                        <input
+                                            type="number"
+                                            v-model="form.weight"
+                                            id="item-weight"
+                                            :class="[
+                                                $page.props.errors.weight
+                                                    ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 dark:bg-gray-700 focus:border-red-500 block w-full p-2.5 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500'
+                                                    : 'bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500',
+                                            ]"
+                                            placeholder="12"
+                                        />
+                                        <p
+                                            class="mt-2 text-sm text-red-600 dark:text-red-500"
+                                            v-if="$page.props.errors.weight"
+                                        >
+                                            {{ $page.props.errors.weight }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            for="category"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            >Kategori</label
+                                        >
+                                        <select
+                                            v-model="form.category"
+                                            id="category"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                        >
+                                            <option value="TV">
+                                                TV/Monitors
+                                            </option>
+                                            <option value="PC">PC</option>
+                                            <option value="GA">
+                                                Gaming/Console
+                                            </option>
+                                            <option value="PH">Phones</option>
+                                        </select>
+                                    </div>
 
-                                    <legend
-                                        class="fieldset-legend text-gray-700"
-                                    >
-                                        Link Penilaian Gform
-                                    </legend>
-                                    <input
-                                        type="text"
-                                        class="input w-1/2"
-                                        placeholder="Link Penilaian Gform"
-                                        v-model="form.detail_score_link"
-                                        :class="[
-                                            $page.props.errors.detail_score_link
-                                                ? 'input-error'
-                                                : '',
-                                        ]"
-                                    />
-                                    <p
-                                        class="fieldset-label text-red-500"
-                                        v-if="$page.props.errors.detail_score_link"
-                                    >
-                                        {{ $page.props.errors.detail_score_link }}
-                                    </p>
-                                </fieldset>
+                                    <div class="sm:col-span-2">
+                                        <label
+                                            for="description"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            >Description</label
+                                        >
+                                        <textarea
+                                            id="description"
+                                            v-model="form.description"
+                                            rows="8"
+                                            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                            placeholder="Your description here"
+                                        ></textarea>
+                                    </div>
+                                </div>
                             </template>
 
                             <template #actions>
-                                <div class="card-actions mt-6">
-                                    <Link
-                                        :href="route('grants.index')"
-                                        class="btn btn-secondary"
-                                        as="button"
-                                    >
-                                        Kembali
-                                    </Link>
-                                    <button
-                                        type="submit"
-                                        class="btn btn-primary"
-                                        :class="{
-                                            'opacity-50': form.processing,
-                                        }"
-                                        :disabled="form.processing"
-                                    >
-                                        <span
-                                            class="loading loading-spinner loading-md"
-                                            :class="{
-                                                hidden: !form.processing,
-                                            }"
-                                        ></span>
-                                        Simpan
-                                    </button>
-                                </div>
+                                <DefaultButton class="mt-4" :size="'s'">
+                                    Simpan
+                                </DefaultButton>
                             </template>
                         </Form>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </AppLayout>

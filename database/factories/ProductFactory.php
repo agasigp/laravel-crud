@@ -21,6 +21,8 @@ class ProductFactory extends Factory
             'description' => $this->faker->sentence(),
             'price' => $this->faker->randomFloat(2, 1, 1000),
             'image' => $this->faker->imageUrl(),
+            'weight' => $this->faker->randomFloat(2, 0.1, 10),
+            'category' => $this->faker->randomElement(['TV', 'PC', 'GA', 'PH']),
         ];
     }
 }
