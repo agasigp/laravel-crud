@@ -60,15 +60,22 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        //
+        // dd($product);
+        return Inertia::render('Products/Form', [
+            'product' => $product,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        //
+        $validated = $request->validated();
+
+        $product->update($validated);
+
+        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
 
     /**
